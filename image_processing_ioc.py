@@ -68,8 +68,8 @@ class ImageProcessingIOC(PVGroup):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    ImagePathPrimary = pvproperty(value = "", name="ImagePathPrimary", doc="Path to the first image (e.g. a direct beam image)", dtype=str)
-    ImagePathSecondary = pvproperty(value = "", name="ImagePathSecondary", doc="Path to the second image (e.g. direct beam through sample)", dtype=str)
+    ImagePathPrimary = pvproperty(value = "", name="ImagePathPrimary", doc="Path to the first image (e.g. a direct beam image)", string_encoding='utf-8', report_as_string=True, max_length=255)
+    ImagePathSecondary = pvproperty(value = "", name="ImagePathSecondary", doc="Path to the second image (e.g. direct beam through sample)", string_encoding='utf-8', report_as_string=True, max_length=255)
     ROI_rowmin = pvproperty(value = 0, name="ROI_rowmin", doc="Minimum row of the region of interest", dtype=int)
     ROI_rowmax = pvproperty(value = 1065, name="ROI_rowmax", doc="Maximum row of the region of interest", dtype=int)
     ROI_colmin = pvproperty(value = 0, name="ROI_colmin", doc="Minimum column of the region of interest", dtype=int)
