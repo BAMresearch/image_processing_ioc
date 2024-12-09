@@ -68,8 +68,8 @@ class ImageProcessingIOC(PVGroup):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    ImagePathPrimary = pvproperty(name="ImagePathPrimary", doc="Path to the first image (e.g. a direct beam image)", dtype=str)
-    ImagePathSecondary = pvproperty(name="ImagePathSecondary", doc="Path to the second image (e.g. direct beam through sample)", dtype=str)
+    ImagePathPrimary = pvproperty(value = "", name="ImagePathPrimary", doc="Path to the first image (e.g. a direct beam image)", dtype=str)
+    ImagePathSecondary = pvproperty(value = "", name="ImagePathSecondary", doc="Path to the second image (e.g. direct beam through sample)", dtype=str)
     ROI_rowmin = pvproperty(value = 0, name="ROI_rowmin", doc="Minimum row of the region of interest", dtype=int)
     ROI_rowmax = pvproperty(value = 1065, name="ROI_rowmax", doc="Maximum row of the region of interest", dtype=int)
     ROI_colmin = pvproperty(value = 0, name="ROI_colmin", doc="Minimum column of the region of interest", dtype=int)
@@ -88,32 +88,36 @@ class ImageProcessingIOC(PVGroup):
         if not Path(value).is_file():
             # do nothing
             logger.warning(f"File {value} does not exist")
-            image = hdf5_get_image(Path(value))
-            image_clipped = image[
-                np.maximum(self.ROI_rowmin, 0):np.minimum(self.ROI_rowmax, image.shape[0]),
-                np.maximum(self.ROI_colmin, 0):np.minimum(self.ROI_colmax, image.shape[1])
-                ]
-            COM, Itotal = beam_analysis(image_clipped, self.ROI_size)
-            await self.primary.total_counts.write(Itotal)
-            await self.primary.center_of_mass_row.write(COM[0])
-            await self.primary.center_of_mass_col.write(COM[1])
-            await self.compute_ratio()
+            return 
+
+        image = hdf5_get_image(Path(value))
+        image_clipped = image[
+            np.maximum(self.ROI_rowmin, 0):np.minimum(self.ROI_rowmax, image.shape[0]),
+            np.maximum(self.ROI_colmin, 0):np.minimum(self.ROI_colmax, image.shape[1])
+            ]
+        COM, Itotal = beam_analysis(image_clipped, self.ROI_size)
+        await self.primary.total_counts.write(Itotal)
+        await self.primary.center_of_mass_row.write(COM[0])
+        await self.primary.center_of_mass_col.write(COM[1])
+        await self.compute_ratio()
         
     @ImagePathSecondary.putter
     async def ImagePathSecondary(self, instance, value: str):
         if not Path(value).is_file():
             # do nothing
             logger.warning(f"File {value} does not exist")
-            image = hdf5_get_image(Path(value))
-            image_clipped = image[
-                np.maximum(self.ROI_rowmin, 0):np.minimum(self.ROI_rowmax, image.shape[0]),
-                np.maximum(self.ROI_colmin, 0):np.minimum(self.ROI_colmax, image.shape[1])
-                ]
-            COM, Itotal = beam_analysis(image_clipped, self.ROI_size)
-            await self.secondary.total_counts.write(Itotal)
-            await self.secondary.center_of_mass_row.write(COM[0])
-            await self.secondary.center_of_mass_col.write(COM[1])
-            await self.compute_ratio()
+            return
+
+        image = hdf5_get_image(Path(value))
+        image_clipped = image[
+            np.maximum(self.ROI_rowmin, 0):np.minimum(self.ROI_rowmax, image.shape[0]),
+            np.maximum(self.ROI_colmin, 0):np.minimum(self.ROI_colmax, image.shape[1])
+            ]
+        COM, Itotal = beam_analysis(image_clipped, self.ROI_size)
+        await self.secondary.total_counts.write(Itotal)
+        await self.secondary.center_of_mass_row.write(COM[0])
+        await self.secondary.center_of_mass_col.write(COM[1])
+        await self.compute_ratio()
 
 
 
