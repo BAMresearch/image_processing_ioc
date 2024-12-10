@@ -77,13 +77,13 @@ class ImageProcessingIOC(PVGroup):
         super().__init__(*args, **kwargs)
 
     ImagePathPrimary = pvproperty(
-        value=b"none",
+        value="none",
         name="ImagePathPrimary",
         doc="Path to the first image (e.g. a direct beam image)",
         record="waveform",
     )
     ImagePathSecondary = pvproperty(
-        value=b"none",
+        value="none",
         name="ImagePathSecondary",
         doc="Path to the second image (e.g. direct beam through sample)",
         record="waveform",
@@ -121,8 +121,9 @@ class ImageProcessingIOC(PVGroup):
             )
 
     @ImagePathPrimary.putter
-    async def ImagePathPrimary(self, instance, value: str):
-        value = str(value, "ASCII")
+    async def ImagePathPrimary(self, instance, value):
+        value = value.encode('ASCII')
+        value = value.decode('utf-8')
         logger.info(f"Received file path {value} for primary image processing.")
         if not Path(value).is_file():
             # do nothing
@@ -145,8 +146,9 @@ class ImageProcessingIOC(PVGroup):
         await self.compute_ratio()
 
     @ImagePathSecondary.putter
-    async def ImagePathSecondary(self, instance, value: str):
-        value = str(value, "ASCII")
+    async def ImagePathSecondary(self, instance, value):
+        value = value.encode('ASCII')
+        value = value.decode('utf-8')
         logger.info(f"Received file path {value} for secondary image processing.")
         if not Path(value).is_file():
             # do nothing
