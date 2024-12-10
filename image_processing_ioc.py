@@ -122,8 +122,7 @@ class ImageProcessingIOC(PVGroup):
 
     @ImagePathPrimary.putter
     async def ImagePathPrimary(self, instance, value: str):
-        value = bytes(value)
-        value = str(value, "LATIN-1")
+        value = str(value, "ASCII")
         logger.info(f"Received file path {value} for primary image processing.")
         if not Path(value).is_file():
             # do nothing
@@ -147,8 +146,7 @@ class ImageProcessingIOC(PVGroup):
 
     @ImagePathSecondary.putter
     async def ImagePathSecondary(self, instance, value: str):
-        value = bytes(value)
-        value = str(value, "LATIN-1")
+        value = str(value, "ASCII")
         logger.info(f"Received file path {value} for secondary image processing.")
         if not Path(value).is_file():
             # do nothing
