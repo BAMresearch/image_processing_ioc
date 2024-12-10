@@ -70,18 +70,18 @@ class ImageProcessingIOC(PVGroup):
 
     ImagePathPrimary = pvproperty(value = "", name="ImagePathPrimary", doc="Path to the first image (e.g. a direct beam image)", string_encoding='utf-8', report_as_string=True, max_length=255)
     ImagePathSecondary = pvproperty(value = "", name="ImagePathSecondary", doc="Path to the second image (e.g. direct beam through sample)", string_encoding='utf-8', report_as_string=True, max_length=255)
-    ROI_rowmin = pvproperty(value = 0, name="ROI_rowmin", doc="Minimum row of the region of interest", dtype=int)
-    ROI_rowmax = pvproperty(value = 1065, name="ROI_rowmax", doc="Maximum row of the region of interest", dtype=int)
-    ROI_colmin = pvproperty(value = 0, name="ROI_colmin", doc="Minimum column of the region of interest", dtype=int)
-    ROI_colmax = pvproperty(value = 1030, name="ROI_colmax", doc="Maximum column of the region of interest", dtype=int)
-    ROI_size = pvproperty(value = 25.0, name="ROI_size", doc="Size of the region of interest around the beam used by beamanalysis", dtype=int)
+    ROI_rowmin = pvproperty(value = 0, name="ROI_rowmin", doc="Minimum row of the region of interest")
+    ROI_rowmax = pvproperty(value = 1065, name="ROI_rowmax", doc="Maximum row of the region of interest")
+    ROI_colmin = pvproperty(value = 0, name="ROI_colmin", doc="Minimum column of the region of interest")
+    ROI_colmax = pvproperty(value = 1030, name="ROI_colmax", doc="Maximum column of the region of interest")
+    ROI_size = pvproperty(value = 25, name="ROI_size", doc="Size of the region of interest around the beam used by beamanalysis")
     primary = SubGroup(Analysis, prefix="primary:")
     secondary = SubGroup(Analysis, prefix="secondary:")
     ratio = pvproperty(value = 0.0, name="ratio", doc = "ratio of the secondary / primary beam intensities")
 
     async def compute_ratio(self):
-        if self.primary.total_counts > 0 and self.secondary.total_counts > 0:
-            await self.ratio.write(self.secondary.total_counts / self.primary.total_counts)
+        if self.primary.total_counts.value > 0 and self.secondary.total_counts.value > 0:
+            await self.ratio.write(self.secondary.total_counts.value / self.primary.total_counts.value)
 
     @ImagePathPrimary.putter
     async def ImagePathPrimary(self, instance, value: str):
