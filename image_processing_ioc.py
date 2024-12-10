@@ -139,7 +139,7 @@ class ImageProcessingIOC(PVGroup):
 
 def main(args=None):
     parser, split_args = template_arg_parser(
-        default_prefix="Portenta:",
+        default_prefix="image:",
         desc="EPICS IOC for analysing detector images",
     )
 
