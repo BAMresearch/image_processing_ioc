@@ -68,13 +68,23 @@ class ImageProcessingIOC(PVGroup):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    ImagePathPrimary = pvproperty(value = "", name="ImagePathPrimary", doc="Path to the first image (e.g. a direct beam image)", string_encoding='utf-8', report_as_string=True, max_length=255)
-    ImagePathSecondary = pvproperty(value = "", name="ImagePathSecondary", doc="Path to the second image (e.g. direct beam through sample)", string_encoding='utf-8', report_as_string=True, max_length=255)
     ROI_rowmin = pvproperty(value = 0, name="ROI_rowmin", doc="Minimum row of the region of interest")
     ROI_rowmax = pvproperty(value = 1065, name="ROI_rowmax", doc="Maximum row of the region of interest")
     ROI_colmin = pvproperty(value = 0, name="ROI_colmin", doc="Minimum column of the region of interest")
     ROI_colmax = pvproperty(value = 1030, name="ROI_colmax", doc="Maximum column of the region of interest")
     ROI_size = pvproperty(value = 25, name="ROI_size", doc="Size of the region of interest around the beam used by beamanalysis")
+    ImagePathPrimary = pvproperty(
+        value=b"none",
+        name="ImagePathPrimary",
+        doc="Path to the first image (e.g. a direct beam image)",
+        record="waveform",
+    )
+    ImagePathSecondary = pvproperty(
+        value=b"none",
+        name="ImagePathSecondary",
+        doc="Path to the second image (e.g. direct beam through sample)",
+        record="waveform",
+    )
     primary = SubGroup(Analysis, prefix="primary:")
     secondary = SubGroup(Analysis, prefix="secondary:")
     ratio = pvproperty(value = 0.0, name="ratio", doc = "ratio of the secondary / primary beam intensities")
@@ -85,6 +95,9 @@ class ImageProcessingIOC(PVGroup):
 
     @ImagePathPrimary.putter
     async def ImagePathPrimary(self, instance, value: str):
+        value = bytes(value)
+        value = str(value, "LATIN-1")
+        logger.info(f"Received file path {value} for primary image processing.")
         if not Path(value).is_file():
             # do nothing
             logger.warning(f"File {value} does not exist")
@@ -103,6 +116,9 @@ class ImageProcessingIOC(PVGroup):
         
     @ImagePathSecondary.putter
     async def ImagePathSecondary(self, instance, value: str):
+        value = bytes(value)
+        value = str(value, "LATIN-1")
+        logger.info(f"Received file path {value} for secondary image processing.")
         if not Path(value).is_file():
             # do nothing
             logger.warning(f"File {value} does not exist")
