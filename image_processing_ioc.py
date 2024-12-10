@@ -92,10 +92,10 @@ class ImageProcessingIOC(PVGroup):
 
         image = hdf5_get_image(Path(value))
         image_clipped = image[
-            np.maximum(self.ROI_rowmin, 0):np.minimum(self.ROI_rowmax, image.shape[0]),
-            np.maximum(self.ROI_colmin, 0):np.minimum(self.ROI_colmax, image.shape[1])
+            np.maximum(self.ROI_rowmin.value, 0):np.minimum(self.ROI_rowmax.value, image.shape[0]),
+            np.maximum(self.ROI_colmin.value, 0):np.minimum(self.ROI_colmax.value, image.shape[1])
             ]
-        COM, Itotal = beam_analysis(image_clipped, self.ROI_size)
+        COM, Itotal = beam_analysis(image_clipped, self.ROI_size.value)
         await self.primary.total_counts.write(Itotal)
         await self.primary.center_of_mass_row.write(COM[0])
         await self.primary.center_of_mass_col.write(COM[1])
@@ -110,10 +110,10 @@ class ImageProcessingIOC(PVGroup):
 
         image = hdf5_get_image(Path(value))
         image_clipped = image[
-            np.maximum(self.ROI_rowmin, 0):np.minimum(self.ROI_rowmax, image.shape[0]),
-            np.maximum(self.ROI_colmin, 0):np.minimum(self.ROI_colmax, image.shape[1])
+            np.maximum(self.ROI_rowmin.value, 0):np.minimum(self.ROI_rowmax.value, image.shape[0]),
+            np.maximum(self.ROI_colmin.value, 0):np.minimum(self.ROI_colmax.value, image.shape[1])
             ]
-        COM, Itotal = beam_analysis(image_clipped, self.ROI_size)
+        COM, Itotal = beam_analysis(image_clipped, self.ROI_size.value)
         await self.secondary.total_counts.write(Itotal)
         await self.secondary.center_of_mass_row.write(COM[0])
         await self.secondary.center_of_mass_col.write(COM[1])
