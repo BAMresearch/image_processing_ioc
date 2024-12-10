@@ -1,11 +1,18 @@
-
 import logging
 import socket
 import sys
 from typing import Union
 import attrs
 from datetime import datetime, timezone
-from caproto.server import PVGroup, SubGroup, pvproperty, PvpropertyString, run, template_arg_parser, AsyncLibraryLayer
+from caproto.server import (
+    PVGroup,
+    SubGroup,
+    pvproperty,
+    PvpropertyString,
+    run,
+    template_arg_parser,
+    AsyncLibraryLayer,
+)
 from pathlib import Path
 import logging
 from analysis import Analysis
@@ -18,10 +25,12 @@ from skimage.measure import regionprops
 logger = logging.getLogger("image_processing_ioc")
 logger.setLevel(logging.INFO)
 
-def hdf5_get_image(filename:Path, h5imagepath: str = "entry/data/data") -> np.ndarray:
-    with h5py.File(filename, 'r') as h5f:
+
+def hdf5_get_image(filename: Path, h5imagepath: str = "entry/data/data") -> np.ndarray:
+    with h5py.File(filename, "r") as h5f:
         image = h5f[h5imagepath][()]
     return image
+
 
 def beam_analysis(imageData: np.ndarray, ROI_SIZE: int) -> Union[tuple, float]:
     """
@@ -61,18 +70,12 @@ def beam_analysis(imageData: np.ndarray, ROI_SIZE: int) -> Union[tuple, float]:
     return center_of_mass, ITotal_region
 
 
-
 # @attrs.define
 class ImageProcessingIOC(PVGroup):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-    ROI_rowmin = pvproperty(value = 0, name="ROI_rowmin", doc="Minimum row of the region of interest")
-    ROI_rowmax = pvproperty(value = 1065, name="ROI_rowmax", doc="Maximum row of the region of interest")
-    ROI_colmin = pvproperty(value = 0, name="ROI_colmin", doc="Minimum column of the region of interest")
-    ROI_colmax = pvproperty(value = 1030, name="ROI_colmax", doc="Maximum column of the region of interest")
-    ROI_size = pvproperty(value = 25, name="ROI_size", doc="Size of the region of interest around the beam used by beamanalysis")
     ImagePathPrimary = pvproperty(
         value=b"none",
         name="ImagePathPrimary",
@@ -85,13 +88,37 @@ class ImageProcessingIOC(PVGroup):
         doc="Path to the second image (e.g. direct beam through sample)",
         record="waveform",
     )
+    ROI_rowmin = pvproperty(
+        value=0, name="ROI_rowmin", doc="Minimum row of the region of interest"
+    )
+    ROI_rowmax = pvproperty(
+        value=1065, name="ROI_rowmax", doc="Maximum row of the region of interest"
+    )
+    ROI_colmin = pvproperty(
+        value=0, name="ROI_colmin", doc="Minimum column of the region of interest"
+    )
+    ROI_colmax = pvproperty(
+        value=1030, name="ROI_colmax", doc="Maximum column of the region of interest"
+    )
+    ROI_size = pvproperty(
+        value=25,
+        name="ROI_size",
+        doc="Size of the region of interest around the beam used by beamanalysis",
+    )
     primary = SubGroup(Analysis, prefix="primary:")
     secondary = SubGroup(Analysis, prefix="secondary:")
-    ratio = pvproperty(value = 0.0, name="ratio", doc = "ratio of the secondary / primary beam intensities")
+    ratio = pvproperty(
+        value=0.0, name="ratio", doc="ratio of the secondary / primary beam intensities"
+    )
 
     async def compute_ratio(self):
-        if self.primary.total_counts.value > 0 and self.secondary.total_counts.value > 0:
-            await self.ratio.write(self.secondary.total_counts.value / self.primary.total_counts.value)
+        if (
+            self.primary.total_counts.value > 0
+            and self.secondary.total_counts.value > 0
+        ):
+            await self.ratio.write(
+                self.secondary.total_counts.value / self.primary.total_counts.value
+            )
 
     @ImagePathPrimary.putter
     async def ImagePathPrimary(self, instance, value: str):
@@ -101,19 +128,23 @@ class ImageProcessingIOC(PVGroup):
         if not Path(value).is_file():
             # do nothing
             logger.warning(f"File {value} does not exist")
-            return 
+            return
 
         image = hdf5_get_image(Path(value))
         image_clipped = image[
-            np.maximum(self.ROI_rowmin.value, 0):np.minimum(self.ROI_rowmax.value, image.shape[0]),
-            np.maximum(self.ROI_colmin.value, 0):np.minimum(self.ROI_colmax.value, image.shape[1])
-            ]
+            np.maximum(self.ROI_rowmin.value, 0) : np.minimum(
+                self.ROI_rowmax.value, image.shape[0]
+            ),
+            np.maximum(self.ROI_colmin.value, 0) : np.minimum(
+                self.ROI_colmax.value, image.shape[1]
+            ),
+        ]
         COM, Itotal = beam_analysis(image_clipped, self.ROI_size.value)
         await self.primary.total_counts.write(Itotal)
         await self.primary.center_of_mass_row.write(COM[0])
         await self.primary.center_of_mass_col.write(COM[1])
         await self.compute_ratio()
-        
+
     @ImagePathSecondary.putter
     async def ImagePathSecondary(self, instance, value: str):
         value = bytes(value)
@@ -126,15 +157,18 @@ class ImageProcessingIOC(PVGroup):
 
         image = hdf5_get_image(Path(value))
         image_clipped = image[
-            np.maximum(self.ROI_rowmin.value, 0):np.minimum(self.ROI_rowmax.value, image.shape[0]),
-            np.maximum(self.ROI_colmin.value, 0):np.minimum(self.ROI_colmax.value, image.shape[1])
-            ]
+            np.maximum(self.ROI_rowmin.value, 0) : np.minimum(
+                self.ROI_rowmax.value, image.shape[0]
+            ),
+            np.maximum(self.ROI_colmin.value, 0) : np.minimum(
+                self.ROI_colmax.value, image.shape[1]
+            ),
+        ]
         COM, Itotal = beam_analysis(image_clipped, self.ROI_size.value)
         await self.secondary.total_counts.write(Itotal)
         await self.secondary.center_of_mass_row.write(COM[0])
         await self.secondary.center_of_mass_col.write(COM[1])
         await self.compute_ratio()
-
 
 
 def main(args=None):
