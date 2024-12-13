@@ -31,14 +31,16 @@ def hdf5_get_image(filename: Path, h5imagepath: str = "entry/data/data") -> np.n
         image = h5f[h5imagepath][()]
     return image
 
+def reduce_extra_image_dimensions(image:np.ndarray, method=np.mean)->np.ndarray:
+    assert method in [np.mean, np.sum], "method must be either np.mean or np.sum function handles"
+    while image.ndim > 2:
+        image = method(image, axis=0)
+    return image
 
 def beam_analysis(imageData: np.ndarray, ROI_SIZE: int) -> Union[tuple, float]:
     """
     Perform beam analysis on the given image data, returning the beam center and flux.
     """
-    # Step 1: reducing the dimensionality of the imageData by averaging until we have a 2D array:
-    while imageData.ndim > 2:
-        imageData = np.sum(imageData, axis=0)
 
     # Step 1: get rid of masked or pegged pixels on an Eiger detector
     labeled_foreground = (np.logical_and(imageData >= 0, imageData <= 1e9)).astype(int)
@@ -131,6 +133,7 @@ class ImageProcessingIOC(PVGroup):
             return
 
         image = hdf5_get_image(Path(value))
+        image = reduce_extra_image_dimensions(image, method=np.sum)
         image_clipped = image[
             np.maximum(self.ROI_rowmin.value, 0) : np.minimum(
                 self.ROI_rowmax.value, image.shape[0]
@@ -156,6 +159,7 @@ class ImageProcessingIOC(PVGroup):
             return
 
         image = hdf5_get_image(Path(value))
+        image = reduce_extra_image_dimensions(image, method=np.sum)
         image_clipped = image[
             np.maximum(self.ROI_rowmin.value, 0) : np.minimum(
                 self.ROI_rowmax.value, image.shape[0]
