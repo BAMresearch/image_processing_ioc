@@ -50,6 +50,9 @@ def beam_analysis(imageData: np.ndarray, ROI_SIZE: int) -> Union[tuple, float]:
     )  # filters.threshold_otsu(maskedTwoDImage) # ignore zero pixels
     labeled_peak = (maskedTwoDImage > threshold_value).astype(int)  # label peak
     properties = regionprops(labeled_peak, imageData)  # calculate region properties
+    if len(properties) == 0:  # no beam found
+        return (0,0), 0
+    # continue normally if beam found
     center_of_mass = properties[0].centroid  # center of mass (unweighted by intensity)
     weighted_center_of_mass = properties[
         0
