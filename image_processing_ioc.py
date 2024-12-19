@@ -119,7 +119,7 @@ class ImageProcessingIOC(PVGroup):
     async def compute_ratio(self):
         if (
             self.primary.total_counts.value > 0
-            and self.secondary.total_counts.value > 0
+            and self.secondary.total_counts.value >= 0
         ):
             await self.ratio.write(
                 self.secondary.total_counts.value / self.primary.total_counts.value
